@@ -1,0 +1,5 @@
+
+^squid:S2259"DA "NullPointerException" could be thrown; "cursor" is nullable here.(õ®áïûÿÿÿÿ
+lsquid:S00117"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Õ¿ÂÐúÿÿÿÿ
+nsquid:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(È»¹Ý
+ysquid:S1488"_Immediately return this expression instead of assigning it to the temporary variable "contact".(õ®áïûÿÿÿÿ
