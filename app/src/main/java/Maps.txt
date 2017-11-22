@@ -1,0 +1,108 @@
+private void saveOutlets() {
+        String location = AppUtils.getEditTextValue(edtbuildingno) + ", " + AppUtils.getEditTextValue(edtstreet) + ", " + AppUtils.getTextViewValue(tvcity) + ", ";
+        if (location == null || location.equals("")) {
+            Toast.makeText(getBaseContext(), "Place is empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String url = "https://maps.googleapis.com/maps/api/geocode/json?";
+
+        try {
+            location = URLEncoder.encode(location, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        String address = "address=" + location;
+        String sensor = "sensor=false";
+        url = url + address + "&" + sensor;
+        DownloadTask downloadTask = new DownloadTask();
+        downloadTask.execute(url);
+    }
+
+    private class DownloadTask extends AsyncTask<String, Integer, String> {
+
+        String data = null;
+
+        @Override
+        protected String doInBackground(String... url) {
+            try {
+                data = downloadUrl(url[0]);
+            } catch (Exception e) {
+                Log.d("Background Task", e.toString());
+            }
+            return data;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            AppLog.e("result_zzzz", result);
+            ParserTask parserTask = new ParserTask();
+            parserTask.execute(result);
+        }
+    }
+
+    private String downloadUrl(String strUrl) throws IOException {
+        String data = "";
+        InputStream iStream = null;
+        HttpURLConnection urlConnection = null;
+        try {
+            URL url = new URL(strUrl);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.connect();
+            iStream = urlConnection.getInputStream();
+            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
+            StringBuffer sb = new StringBuffer();
+
+            String line = "";
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
+            data = sb.toString();
+            br.close();
+
+        } catch (Exception e) {
+            AppLog.e("Exception while downloading url", e.toString());
+        } finally {
+            iStream.close();
+            urlConnection.disconnect();
+        }
+
+        return data;
+
+    }
+
+    class ParserTask extends AsyncTask<String, Integer, List<HashMap<String, String>>> {
+
+        JSONObject jObject;
+
+        @Override
+        protected List<HashMap<String, String>> doInBackground(String... jsonData) {
+
+            List<HashMap<String, String>> places = null;
+            GeocodeJSONParser parser = new GeocodeJSONParser();
+
+            try {
+                jObject = new JSONObject(jsonData[0]);
+                places = parser.parse(jObject);
+
+            } catch (Exception e) {
+                Log.d("Exception", e.toString());
+            }
+            return places;
+        }
+
+        @Override
+        protected void onPostExecute(List<HashMap<String, String>> list) {
+            for (int i = 0; i < list.size(); i++) {
+                HashMap<String, String> hmPlace = list.get(i);
+                lat = Double.parseDouble(hmPlace.get("lat"));
+                lng = Double.parseDouble(hmPlace.get("lng"));
+                // Getting name
+                String name = hmPlace.get("formatted_address");
+                AppLog.e("llat_XX", lat + "");
+                AppLog.e("llng_XX", lng + "");
+                AppLog.e("llname_XX", name + "");
+            }
+            updateUserProfileAPI(lat, lng);
+        }
+    }
